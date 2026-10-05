@@ -1,38 +1,32 @@
 ﻿using System;
 using System.IO;
+using NotificationGate.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using NotificationGate.Settings;
+using Microsoft.Extensions.Logging;
 
-namespace NotificationGate
-{
-    class NotificationGate
-    {
-        static void Main()
-        {
-            using var watcher = new FileSystemWatcher(@"C:\Users\אשר ויהודית פירוב\Desktop\KolAman\alert-simulator\alert-simulator\alerts");
+var builder = Host.CreateApplicationBuilder(args);
 
-            watcher.NotifyFilter = NotifyFilters.Attributes
-                                 | NotifyFilters.CreationTime
-                                 | NotifyFilters.DirectoryName
-                                 | NotifyFilters.FileName
-                                 | NotifyFilters.LastAccess
-                                 | NotifyFilters.LastWrite
-                                 | NotifyFilters.Security
-                                 | NotifyFilters.Size;
+builder.Services.Configure<KafkaSettings>(
+builder.Configuration.GetSection("Kafka"));
 
-            watcher.Created += OnCreated;
+builder.Services.Configure<FileWatcherSettings>(
+builder.Configuration.GetSection("FileWatcher"));
 
-            watcher.Filter = "*.ready";
-            watcher.IncludeSubdirectories = true;
-            watcher.EnableRaisingEvents = true;
+builder.Services.AddSingleton<KafkaProducerService>();
+builder.Services.AddSingleton<KafkaTopicManager>();
+builder.Services.AddSingleton<FileWatcherService>();
 
-            Console.WriteLine("Press enter to exit.");
-            Console.ReadLine();
-        }
+var host = builder.Build();
 
-        private static void OnCreated(object sender, FileSystemEventArgs e)
-        {
-            string value = $"Created: {e.FullPath}";
-            Console.WriteLine(value);
-        }
+var topicManager = host.Services.GetRequiredService<KafkaTopicManager>();
 
-    }
-}
+await topicManager.EnsureTopicExistsAsync();
+
+var fileWatcher = host.Services.GetRequiredService<FileWatcherService>();
+
+fileWatcher.Start();
+
+await host.RunAsync();
