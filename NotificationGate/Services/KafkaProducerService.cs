@@ -26,10 +26,10 @@ public class KafkaProducerService
 
     public async Task<DeliveryResult<Null, string>> SendAsync(string jsonMessage)
     {
-        var value = JsonSerializer.Serialize(jsonMessage);
+        
         var message = new Message<Null, string>
         {
-            Value = value
+            Value = jsonMessage
         };
 
         var result = await _producer.ProduceAsync(_topic, message);
