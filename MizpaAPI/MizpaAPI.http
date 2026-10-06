@@ -1,0 +1,6 @@
+@MizpaAPI_HostAddress = http://localhost:5085
+
+GET {{MizpaAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

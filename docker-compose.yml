@@ -54,6 +54,18 @@
         - "5601:5601"
       environment:
         - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    
+    mongodb:
+      image: mongo:8.3.11
+      container_name: mongodb
+      environment:
+        MONGO_INITDB_DATABASE: "AlertsDb"
+      ports:
+        - "27017:27017"
+      volumes:
+        - mongo_data:/data/db
+    
 
   volumes:
     es_data:
+    mongo_data:
